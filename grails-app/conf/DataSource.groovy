@@ -26,7 +26,11 @@ environments {
     production {
         dataSource {
             dbCreate = "update"
-            url = "jdbc:hsqldb:file:prodDb;shutdown=true"
+            url = "jdbc:mysql://ec2-50-19-213-178.compute-1.amazonaws.com/techradar"
+            driverClassName = "com.mysql.jdbc.Driver"
+            dialect = org.hibernate.dialect.MySQL5InnoDBDialect
+            username = "techradar"
+            password = "cdatechradar"
         }
     }
 }
