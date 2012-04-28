@@ -1,100 +1,103 @@
 package techradar
 
+import org.springframework.dao.DataIntegrityViolationException
+
 class TecnologiaController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
-    def index = {
+    def index() {
         redirect(action: "list", params: params)
     }
 
-    def list = {
+    def list() {
         params.max = Math.min(params.max ? params.int('max') : 10, 100)
         [tecnologiaInstanceList: Tecnologia.list(params), tecnologiaInstanceTotal: Tecnologia.count()]
     }
 
-    def create = {
-        def tecnologiaInstance = new Tecnologia()
-        tecnologiaInstance.properties = params
-        return [tecnologiaInstance: tecnologiaInstance]
+    def create() {
+        [tecnologiaInstance: new Tecnologia(params)]
     }
 
-    def save = {
+    def save() {
         def tecnologiaInstance = new Tecnologia(params)
-        if (tecnologiaInstance.save(flush: true)) {
-            flash.message = "${message(code: 'default.created.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), tecnologiaInstance.id])}"
-            redirect(action: "show", id: tecnologiaInstance.id)
-        }
-        else {
+        if (!tecnologiaInstance.save(flush: true)) {
             render(view: "create", model: [tecnologiaInstance: tecnologiaInstance])
+            return
         }
+
+        flash.message = message(code: 'default.created.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), tecnologiaInstance.id])
+        redirect(action: "show", id: tecnologiaInstance.id)
     }
 
-    def show = {
+    def show() {
         def tecnologiaInstance = Tecnologia.get(params.id)
         if (!tecnologiaInstance) {
-            flash.message = "${message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])}"
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])
             redirect(action: "list")
+            return
         }
-        else {
-            [tecnologiaInstance: tecnologiaInstance]
-        }
+
+        [tecnologiaInstance: tecnologiaInstance]
     }
 
-    def edit = {
+    def edit() {
         def tecnologiaInstance = Tecnologia.get(params.id)
         if (!tecnologiaInstance) {
-            flash.message = "${message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])}"
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])
             redirect(action: "list")
+            return
         }
-        else {
-            return [tecnologiaInstance: tecnologiaInstance]
-        }
+
+        [tecnologiaInstance: tecnologiaInstance]
     }
 
-    def update = {
+    def update() {
         def tecnologiaInstance = Tecnologia.get(params.id)
-        if (tecnologiaInstance) {
-            if (params.version) {
-                def version = params.version.toLong()
-                if (tecnologiaInstance.version > version) {
-                    
-                    tecnologiaInstance.errors.rejectValue("version", "default.optimistic.locking.failure", [message(code: 'tecnologia.label', default: 'Tecnologia')] as Object[], "Another user has updated this Tecnologia while you were editing")
-                    render(view: "edit", model: [tecnologiaInstance: tecnologiaInstance])
-                    return
-                }
-            }
-            tecnologiaInstance.properties = params
-            if (!tecnologiaInstance.hasErrors() && tecnologiaInstance.save(flush: true)) {
-                flash.message = "${message(code: 'default.updated.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), tecnologiaInstance.id])}"
-                redirect(action: "show", id: tecnologiaInstance.id)
-            }
-            else {
+        if (!tecnologiaInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])
+            redirect(action: "list")
+            return
+        }
+
+        if (params.version) {
+            def version = params.version.toLong()
+            if (tecnologiaInstance.version > version) {
+                tecnologiaInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
+                        [message(code: 'tecnologia.label', default: 'Tecnologia')] as Object[],
+                        "Another user has updated this Tecnologia while you were editing")
                 render(view: "edit", model: [tecnologiaInstance: tecnologiaInstance])
+                return
             }
         }
-        else {
-            flash.message = "${message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])}"
-            redirect(action: "list")
+
+        tecnologiaInstance.properties = params
+
+        if (!tecnologiaInstance.save(flush: true)) {
+            render(view: "edit", model: [tecnologiaInstance: tecnologiaInstance])
+            return
         }
+
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), tecnologiaInstance.id])
+        redirect(action: "show", id: tecnologiaInstance.id)
     }
 
-    def delete = {
+    def delete() {
         def tecnologiaInstance = Tecnologia.get(params.id)
-        if (tecnologiaInstance) {
-            try {
-                tecnologiaInstance.delete(flush: true)
-                flash.message = "${message(code: 'default.deleted.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])}"
-                redirect(action: "list")
-            }
-            catch (org.springframework.dao.DataIntegrityViolationException e) {
-                flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])}"
-                redirect(action: "show", id: params.id)
-            }
-        }
-        else {
-            flash.message = "${message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])}"
+        if (!tecnologiaInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])
             redirect(action: "list")
+            return
+        }
+
+        try {
+            tecnologiaInstance.delete(flush: true)
+            flash.message = message(code: 'default.deleted.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])
+            redirect(action: "list")
+        }
+        catch (DataIntegrityViolationException e) {
+            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'tecnologia.label', default: 'Tecnologia'), params.id])
+            redirect(action: "show", id: params.id)
         }
     }
 }
