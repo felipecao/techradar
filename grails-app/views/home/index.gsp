@@ -136,4 +136,6 @@
         </aside>
     </body>
 
+    <!-- Grails 2.0.3 -->
+
 </html>

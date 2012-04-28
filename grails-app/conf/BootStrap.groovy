@@ -1,4 +1,3 @@
-import grails.util.Environment
 import techradar.Avaliacao
 import techradar.Tecnologia
 
